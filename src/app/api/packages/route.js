@@ -3,33 +3,63 @@ import { query } from '@/lib/db';
 
 export async function GET() {
   try {
-    const res = await query('SELECT * FROM itinerary_templates ORDER BY id ASC');
-    
-    // In case templates exist
-    if (res.rows && res.rows.length > 0) {
-      const formatted = res.rows.map(item => {
-        let days = [];
-        if (typeof item.days === 'string') {
-          try { days = JSON.parse(item.days); } catch (e) { days = []; }
-        } else if (Array.isArray(item.days)) {
-          days = item.days;
+    // 1. Try querying possible itinerary table names used in CRM
+    const tableCandidates = ['itinerary_master', 'itinerary_templates', 'itineraries', 'packages', 'tour_packages'];
+    let rows = null;
+    let foundTable = null;
+
+    for (const table of tableCandidates) {
+      try {
+        const res = await query(`SELECT * FROM ${table} ORDER BY id ASC`);
+        if (res && res.rows && res.rows.length > 0) {
+          rows = res.rows;
+          foundTable = table;
+          break;
         }
+      } catch (tableErr) {
+        // Table doesn't exist, try next
+      }
+    }
+
+    // 2. If dynamic packages exist in database
+    if (rows && rows.length > 0) {
+      const formatted = rows.map(item => {
+        let days = [];
+        const rawDays = item.days || item.itinerary || item.days_json || item.schedule || item.day_details;
+        if (typeof rawDays === 'string') {
+          try { days = JSON.parse(rawDays); } catch (e) { days = []; }
+        } else if (Array.isArray(rawDays)) {
+          days = rawDays;
+        }
+
+        // Format day objects consistently
+        const formattedDays = days.map((d, idx) => ({
+          dayNumber: d.dayNumber || d.day_number || d.day || idx + 1,
+          activities: d.activities || d.title || d.heading || `Day ${idx + 1} Sightseeing`,
+          description: d.description || d.desc || d.details || ''
+        }));
+
         return {
           id: item.id,
-          name: item.name,
-          region: item.region,
-          totalDays: item.total_days,
-          estimatedPrice: item.estimated_price,
-          days
+          name: item.name || item.title || item.package_name || item.itinerary_name || 'Himalayan Tour',
+          region: item.region || item.category || item.location || 'Sikkim',
+          totalDays: item.total_days || item.days_count || item.duration || (formattedDays.length > 0 ? formattedDays.length : 4),
+          estimatedPrice: item.estimated_price || item.price || item.cost || item.base_price || 15000,
+          days: formattedDays
         };
       });
 
-      return NextResponse.json({ success: true, packages: formatted });
+      return NextResponse.json({ 
+        success: true, 
+        source: `database (${foundTable})`,
+        packages: formatted 
+      });
     }
 
-    // Default regional templates if empty
+    // 3. Fallback default templates if database table is currently empty
     return NextResponse.json({
       success: true,
+      source: 'default',
       packages: [
         {
           id: 1,
@@ -38,9 +68,9 @@ export async function GET() {
           totalDays: 4,
           estimatedPrice: 16500.00,
           days: [
-            { dayNumber: 1, description: 'Pickup from NJP/Bagdogra Airport (IXB) to Gangtok. En-route Teesta rafting & M.G. Marg exploration.', activities: 'Airport Transfer, Teesta View, M.G. Marg Evening' },
-            { dayNumber: 2, description: 'Full Day Gangtok Sightseeing (Tashi Viewpoint, Waterfalls, Monasteries, Ropeway, Flower Show).', activities: 'Tashi Viewpoint, Ban Jhakri Falls, Ropeway' },
-            { dayNumber: 3, description: 'Excursion to Changu / Tsomgo Lake (12,400 ft) & Baba Harbhajan Mandir. Optional Nathula Pass.', activities: 'High Altitude Lake, Baba Mandir, Alpine Vistas' },
+            { dayNumber: 1, description: 'Pickup from NJP/Bagdogra Airport (IXB) to Gangtok. En-route Teesta rafting & M.G. Marg exploration.', activities: 'Airport/NJP Pickup, Melli River Rafting, M.G. Marg Evening Walk' },
+            { dayNumber: 2, description: 'Full Day Gangtok Sightseeing (Tashi Viewpoint, Waterfalls, Monasteries, Ropeway, Flower Show).', activities: 'Tashi Viewpoint, Waterfalls, Monasteries, Gangtok Ropeway, Flower Show' },
+            { dayNumber: 3, description: 'Excursion to Changu / Tsomgo Lake (12,400 ft) & Baba Harbhajan Mandir. Optional Nathula Pass.', activities: 'Changu Lake, Baba Mandir & Alpine Vistas' },
             { dayNumber: 4, description: 'Hotel checkout and transfer back to Bagdogra / NJP station.', activities: 'Scenic Transfer & Departure' }
           ]
         },
@@ -51,8 +81,8 @@ export async function GET() {
           totalDays: 3,
           estimatedPrice: 15000.00,
           days: [
-            { dayNumber: 1, description: 'Gangtok to Lachen via Seven Sisters Waterfall, Mangan Valley & Chungthang. Overnight at Lachen.', activities: 'Permit Check, Seven Sisters Waterfall, Lachen Village' },
-            { dayNumber: 2, description: 'Gurudongmar Lake (15,900 ft) sacred excursion, Thangu Valley, then transfer to Lachung.', activities: 'Gurudongmar Sacred Lake, Thangu, Lachung' },
+            { dayNumber: 1, description: 'Gangtok to Lachen via Seven Sisters Waterfall, Mangan Valley & Chungthang. Overnight at Lachen.', activities: 'Tashi View Point, Waterfalls, Mangan Valley, Singhik, Naga Waterfalls, Chumthang Valley, Lachen Halt' },
+            { dayNumber: 2, description: 'Gurudongmar Lake (15,900 ft) sacred excursion, Thangu Valley, then transfer to Lachung.', activities: 'Gurudongmar High Altitude Lake, Thangu Valley, Bhim Nala Waterfalls, Lachung Halt' },
             { dayNumber: 3, description: 'Yumthang Valley of Flowers, Rhododendron Sanctuary, Natural Hot Springs & return to Gangtok.', activities: 'Yumthang Valley, Hot Springs, Gangtok Return' }
           ]
         },
