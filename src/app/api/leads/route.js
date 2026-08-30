@@ -15,14 +15,14 @@ export async function POST(request) {
 
     const travelersCount = parseInt(numTravelers, 10) || 2;
     
-    // Format travel notes with any specific package or vehicle requests
-    let detailsArr = [];
-    if (travelDates) detailsArr.push(travelDates);
-    if (packageName) detailsArr.push(`[Package: ${packageName}]`);
+    // Explicitly tag lead as originating from the website with full details
+    let detailsArr = ['🌐 [Website Online Lead]'];
+    if (packageName) detailsArr.push(`[${packageName}]`);
+    if (travelDates && !travelDates.includes('Website Web Lead')) detailsArr.push(travelDates);
     if (vehicleType) detailsArr.push(`[Vehicle: ${vehicleType}]`);
     if (notes) detailsArr.push(`Notes: ${notes}`);
 
-    const combinedTravelDates = detailsArr.length > 0 ? detailsArr.join(' | ') : 'Website Web Lead';
+    const combinedTravelDates = detailsArr.join(' | ');
 
     let newLead;
     try {
