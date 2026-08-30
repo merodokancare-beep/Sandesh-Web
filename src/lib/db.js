@@ -33,13 +33,31 @@ async function ensureSchema() {
     initPromise = (async () => {
       try {
         await pool.query(`
-          ALTER TABLE leads ALTER COLUMN travel_dates TYPE TEXT;
-          ALTER TABLE leads ALTER COLUMN client_phone TYPE VARCHAR(100);
-          ALTER TABLE leads ALTER COLUMN client_name TYPE VARCHAR(255);
+          CREATE TABLE IF NOT EXISTS leads (
+            id SERIAL PRIMARY KEY,
+            partner_id INTEGER,
+            client_name VARCHAR(255) NOT NULL,
+            client_phone VARCHAR(100) NOT NULL,
+            travel_dates TEXT,
+            num_travelers INTEGER DEFAULT 2,
+            status VARCHAR(50) DEFAULT 'new',
+            start_date TEXT,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+          );
         `);
+        try {
+          await pool.query(`
+            ALTER TABLE leads ADD COLUMN IF NOT EXISTS start_date TEXT;
+            ALTER TABLE leads ALTER COLUMN travel_dates TYPE TEXT;
+            ALTER TABLE leads ALTER COLUMN client_phone TYPE VARCHAR(100);
+            ALTER TABLE leads ALTER COLUMN client_name TYPE VARCHAR(255);
+          `);
+        } catch (alterErr) {
+          console.warn('Column alter note:', alterErr.message);
+        }
         isInitialized = true;
       } catch (err) {
-        console.warn('Schema alteration note:', err.message);
+        console.warn('Schema initialization note:', err.message);
         isInitialized = true;
       }
     })();

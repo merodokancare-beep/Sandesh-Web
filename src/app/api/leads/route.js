@@ -24,33 +24,55 @@ export async function POST(request) {
 
     const combinedTravelDates = detailsArr.length > 0 ? detailsArr.join(' | ') : 'Website Web Lead';
 
-    // Insert directly into the shared PostgreSQL `leads` table
-    const result = await query(
-      `INSERT INTO leads (partner_id, client_name, client_phone, travel_dates, num_travelers, status, start_date)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
-       RETURNING id, client_name, client_phone, travel_dates, num_travelers, status, created_at`,
-      [
-        null, // Direct website lead (no partner commission)
-        clientName.trim(),
-        clientPhone.trim(),
-        combinedTravelDates,
-        travelersCount,
-        'new',
-        startDate || null
-      ]
-    );
-
-    const newLead = result.rows[0];
+    let newLead;
+    try {
+      // Insert with start_date
+      const result = await query(
+        `INSERT INTO leads (partner_id, client_name, client_phone, travel_dates, num_travelers, status, start_date)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         RETURNING id, client_name, client_phone, travel_dates, num_travelers, status, created_at`,
+        [
+          null,
+          clientName.trim(),
+          clientPhone.trim(),
+          combinedTravelDates,
+          travelersCount,
+          'new',
+          startDate || null
+        ]
+      );
+      newLead = result.rows[0];
+    } catch (insertErr) {
+      console.warn('Initial insert note, trying standard insert:', insertErr.message);
+      // Fallback insert without start_date column if not present in older CRM table
+      const fallbackResult = await query(
+        `INSERT INTO leads (partner_id, client_name, client_phone, travel_dates, num_travelers, status)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         RETURNING id, client_name, client_phone, travel_dates, num_travelers, status, created_at`,
+        [
+          null,
+          clientName.trim(),
+          clientPhone.trim(),
+          combinedTravelDates,
+          travelersCount,
+          'new'
+        ]
+      );
+      newLead = fallbackResult.rows[0];
+    }
 
     return NextResponse.json({
       success: true,
       message: 'Inquiry received successfully! Our travel specialist will connect with you on WhatsApp shortly.',
-      lead: newLead
+      lead: newLead || { client_name: clientName, client_phone: clientPhone }
     });
   } catch (error) {
     console.error('API /leads error:', error);
     return NextResponse.json(
-      { error: 'Failed to submit inquiry. Please try WhatsApp directly or check your connection.' },
+      { 
+        error: `Database submission issue: ${error.message || 'Check database connection'}. Please try WhatsApp directly.`,
+        details: error.message 
+      },
       { status: 500 }
     );
   }
