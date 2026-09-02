@@ -15,7 +15,7 @@ export async function POST(request) {
 
     const travelersCount = parseInt(numTravelers, 10) || 2;
     
-    // Explicitly tag lead as originating from the website with full details
+    // Explicitly  tag lead as originating from the website with full details
     let detailsArr = ['🌐 [Website Online Lead]'];
     if (packageName) detailsArr.push(`[${packageName}]`);
     if (travelDates && !travelDates.includes('Website Web Lead')) detailsArr.push(travelDates);
