@@ -172,24 +172,7 @@ export default function PackageList({ onOpenInquiry }) {
                     {pkg.name}
                   </h3>
 
-                {/* Price Display */}
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'baseline',
-                  gap: '0.5rem',
-                  background: 'rgba(16, 185, 129, 0.06)',
-                  padding: '0.75rem 1rem',
-                  borderRadius: 'var(--radius-sm)',
-                  border: '1px solid rgba(16, 185, 129, 0.15)'
-                }}>
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Starting from:</span>
-                  <span style={{ fontSize: '1.45rem', fontWeight: 800, color: 'var(--primary)' }}>
-                    Rs. {Number(pkg.estimatedPrice).toLocaleString('en-IN')}
-                  </span>
-                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>/ private vehicle & stay</span>
-                </div>
-
-                {/* Day-by-Day Accordion Preview */}
+                  {/* Day-by-Day Accordion Preview */}
                 <div style={{ flexGrow: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
                     <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-secondary)' }}>

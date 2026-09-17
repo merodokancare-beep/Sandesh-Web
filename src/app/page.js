@@ -17,9 +17,11 @@ import Footer from '@/components/Footer';
 import WhatsAppWidget from '@/components/WhatsAppWidget';
 import FloatingInquiryBar from '@/components/FloatingInquiryBar';
 import InquiryModal from '@/components/InquiryModal';
+import ReviewModal from '@/components/ReviewModal';
 
 export default function Home() {
   const [modalOpen, setModalOpen] = useState(false);
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState('');
   const [toastMessage, setToastMessage] = useState(null);
 
@@ -99,7 +101,7 @@ export default function Home() {
       <PermitGuide />
 
       {/* Reviews & Social Proof */}
-      <ReviewsSection />
+      <ReviewsSection onOpenReviewModal={() => setReviewModalOpen(true)} />
 
       {/* Footer */}
       <Footer />
@@ -116,6 +118,16 @@ export default function Home() {
         onClose={() => setModalOpen(false)}
         initialPackageName={selectedPackage}
         onSuccessLead={handleSuccessLead}
+      />
+
+      {/* Customer Review Submission Modal */}
+      <ReviewModal
+        isOpen={reviewModalOpen}
+        onClose={() => setReviewModalOpen(false)}
+        onReviewSubmitted={() => {
+          setToastMessage('Review submitted! It will appear on the website once approved by our team.');
+          setTimeout(() => setToastMessage(null), 6000);
+        }}
       />
     </div>
   );

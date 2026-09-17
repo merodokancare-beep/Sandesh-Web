@@ -13,19 +13,21 @@ export default function Footer() {
           {/* Col 1: Brand */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
-              <div style={{
-                width: '38px',
-                height: '38px',
-                borderRadius: '8px',
-                background: 'var(--primary)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#fff',
-                fontSize: '1.15rem'
-              }}>
-                <i className="fa-solid fa-mountain-sun"></i>
-              </div>
+              <img
+                src="/logo.png"
+                alt="Sandesh Travels Logo"
+                style={{
+                  width: '42px',
+                  height: '42px',
+                  borderRadius: '8px',
+                  objectFit: 'contain',
+                  background: '#ffffff',
+                  padding: '3px',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  flexShrink: 0
+                }}
+              />
               <span style={{ fontSize: '1.3rem', fontWeight: 800, color: '#fff', letterSpacing: '-0.02em' }}>
                 Sandesh Travels
               </span>

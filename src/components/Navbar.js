@@ -30,26 +30,27 @@ export default function Navbar({ onOpenInquiry }) {
       <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '76px' }}>
         {/* Brand */}
         <a href="#" style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', textDecoration: 'none' }}>
-          <div style={{
-            width: '42px',
-            height: '42px',
-            borderRadius: '10px',
-            background: 'linear-gradient(135deg, #10b981, #059669)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#fff',
-            fontSize: '1.25rem',
-            boxShadow: '0 4px 12px var(--primary-glow)'
-          }}>
-            <i className="fa-solid fa-mountain-sun"></i>
-          </div>
+          <img
+            src="/logo.png"
+            alt="Sandesh Travels"
+            style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: '10px',
+              objectFit: 'contain',
+              background: '#ffffff',
+              padding: '3px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              flexShrink: 0
+            }}
+          />
           <div>
             <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
               Sandesh Travels
             </div>
             <div style={{ fontSize: '0.72rem', color: '#34d399', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-              Sikkim & Himalayan Journeys
+              Tours & Travel Company
             </div>
           </div>
         </a>
