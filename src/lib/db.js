@@ -84,6 +84,9 @@ async function ensureSchema() {
             ALTER TABLE leads ALTER COLUMN client_name TYPE VARCHAR(255);
             ALTER TABLE reviews ADD COLUMN IF NOT EXISTS client_email VARCHAR(255);
             ALTER TABLE reviews ADD COLUMN IF NOT EXISTS travel_date VARCHAR(100);
+            ALTER TABLE reviews ADD COLUMN IF NOT EXISTS lead_id INTEGER;
+            ALTER TABLE leads ADD COLUMN IF NOT EXISTS feedback_sent_at TIMESTAMP WITH TIME ZONE;
+            ALTER TABLE leads ADD COLUMN IF NOT EXISTS has_reviewed BOOLEAN DEFAULT FALSE;
           `);
         } catch (alterErr) {
           console.warn('Column alter note:', alterErr.message);

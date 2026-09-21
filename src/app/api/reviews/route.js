@@ -31,7 +31,8 @@ export async function GET() {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { clientName, clientPhone, clientEmail, location, tourName, rating, reviewText, travelDate } = body;
+    const { clientName, clientPhone, clientEmail, location, tourName, rating, reviewText, travelDate, leadId, lead_id } = body;
+    const finalLeadId = leadId || lead_id ? parseInt(leadId || lead_id, 10) : null;
 
     if (!clientName || !clientPhone || !reviewText) {
       return NextResponse.json({ 
@@ -51,10 +52,11 @@ export async function POST(request) {
         rating, 
         review_text, 
         travel_date, 
-        is_approved
+        is_approved,
+        lead_id
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, FALSE)
-      RETURNING id, client_name, rating, is_approved, created_at
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, FALSE, $9)
+      RETURNING id, client_name, rating, is_approved, lead_id, created_at
     `, [
       clientName.trim(),
       clientPhone.trim(),
@@ -63,8 +65,18 @@ export async function POST(request) {
       tourName ? tourName.trim() : 'Sikkim Tour',
       cleanRating,
       reviewText.trim(),
-      travelDate ? travelDate.trim() : `Visited ${new Date().toLocaleString('en-US', { month: 'short', year: 'numeric' })}`
+      travelDate ? travelDate.trim() : `Visited ${new Date().toLocaleString('en-US', { month: 'short', year: 'numeric' })}`,
+      finalLeadId
     ]);
+
+    // If tied to a CRM lead, flag has_reviewed = true
+    if (finalLeadId) {
+      try {
+        await query(`UPDATE leads SET has_reviewed = TRUE WHERE id = $1`, [finalLeadId]);
+      } catch (leadUpdateErr) {
+        console.warn('Note updating lead has_reviewed:', leadUpdateErr.message);
+      }
+    }
 
     return NextResponse.json({
       success: true,

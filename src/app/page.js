@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import HeroBanner from '@/components/HeroBanner';
 import TrustPillars from '@/components/TrustPillars';
@@ -24,6 +24,15 @@ export default function Home() {
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState('');
   const [toastMessage, setToastMessage] = useState(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('feedback') || params.get('review')) {
+        setReviewModalOpen(true);
+      }
+    }
+  }, []);
 
   const handleOpenInquiry = (packageName = '') => {
     setSelectedPackage(packageName);

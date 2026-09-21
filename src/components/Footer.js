@@ -117,6 +117,11 @@ export default function Footer() {
                   Custom Tailor-Made Planner
                 </a>
               </li>
+              <li>
+                <a href="/feedback" style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: 600 }}>
+                  <i className="fa-solid fa-star" style={{ marginRight: '5px', fontSize: '0.8rem', color: '#fbbf24' }}></i> Submit Tour Feedback
+                </a>
+              </li>
             </ul>
           </div>
 

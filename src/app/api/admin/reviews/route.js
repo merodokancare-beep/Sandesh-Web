@@ -31,7 +31,8 @@ export async function GET(request) {
         review_text, 
         travel_date, 
         is_approved, 
-        created_at 
+        created_at,
+        lead_id 
       FROM reviews 
       ORDER BY is_approved ASC, created_at DESC, id DESC
     `);

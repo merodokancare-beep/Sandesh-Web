@@ -70,7 +70,7 @@ export default function ReviewsSection({ onOpenReviewModal }) {
             </p>
           </div>
 
-          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
             <button
               onClick={onOpenReviewModal}
               className="btn btn-primary"
@@ -80,6 +80,15 @@ export default function ReviewsSection({ onOpenReviewModal }) {
               <i className="fa-solid fa-pen-to-square"></i>
               <span>Write a Review</span>
             </button>
+            <Link
+              href="/feedback"
+              className="btn btn-secondary btn-sm"
+              title="Dedicated Feedback Page"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.82rem', padding: '0.5rem 0.85rem' }}
+            >
+              <i className="fa-solid fa-arrow-up-right-from-square"></i>
+              <span>Feedback Link</span>
+            </Link>
             <Link
               href="/admin/reviews"
               className="btn btn-secondary btn-sm"
