@@ -29,7 +29,7 @@ export default function Navbar({ onOpenInquiry }) {
     >
       <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '76px' }}>
         {/* Brand */}
-        <a href="#" style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', textDecoration: 'none' }}>
+        <a href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', textDecoration: 'none' }}>
           <img
             src="/logo.png"
             alt="Sandesh Travels"
@@ -57,22 +57,25 @@ export default function Navbar({ onOpenInquiry }) {
 
         {/* Desktop Nav Links */}
         <nav style={{ display: 'flex', alignItems: 'center', gap: '1.75rem' }} className="desktop-nav">
-          <a href="#visual-attractions" style={{ color: 'var(--accent-gold)', textDecoration: 'none', fontSize: '0.92rem', fontWeight: 600, transition: 'var(--transition)' }}>
+          <a href="/about" style={{ color: 'var(--text-main)', textDecoration: 'none', fontSize: '0.92rem', fontWeight: 600, transition: 'var(--transition)' }}>
+            About Us
+          </a>
+          <a href="/#visual-attractions" style={{ color: 'var(--accent-gold)', textDecoration: 'none', fontSize: '0.92rem', fontWeight: 600, transition: 'var(--transition)' }}>
             <i className="fa-solid fa-camera-retro" style={{ marginRight: '4px' }}></i> Visual Spots
           </a>
-          <a href="#packages" style={{ color: 'var(--text-main)', textDecoration: 'none', fontSize: '0.92rem', fontWeight: 500, transition: 'var(--transition)' }}>
+          <a href="/#packages" style={{ color: 'var(--text-main)', textDecoration: 'none', fontSize: '0.92rem', fontWeight: 500, transition: 'var(--transition)' }}>
             Tour Packages
           </a>
-          <a href="#custom-planner" style={{ color: 'var(--text-main)', textDecoration: 'none', fontSize: '0.92rem', fontWeight: 500, transition: 'var(--transition)' }}>
+          <a href="/#custom-planner" style={{ color: 'var(--text-main)', textDecoration: 'none', fontSize: '0.92rem', fontWeight: 500, transition: 'var(--transition)' }}>
             Custom Planner
           </a>
-          <a href="#fleet" style={{ color: 'var(--text-main)', textDecoration: 'none', fontSize: '0.92rem', fontWeight: 500, transition: 'var(--transition)' }}>
+          <a href="/#fleet" style={{ color: 'var(--text-main)', textDecoration: 'none', fontSize: '0.92rem', fontWeight: 500, transition: 'var(--transition)' }}>
             Fleet & Cabs
           </a>
-          <a href="#permits" style={{ color: 'var(--text-main)', textDecoration: 'none', fontSize: '0.92rem', fontWeight: 500, transition: 'var(--transition)' }}>
+          <a href="/#permits" style={{ color: 'var(--text-main)', textDecoration: 'none', fontSize: '0.92rem', fontWeight: 500, transition: 'var(--transition)' }}>
             Permits & FAQ
           </a>
-          <a href="#reviews" style={{ color: 'var(--text-main)', textDecoration: 'none', fontSize: '0.92rem', fontWeight: 500, transition: 'var(--transition)' }}>
+          <a href="/#reviews" style={{ color: 'var(--text-main)', textDecoration: 'none', fontSize: '0.92rem', fontWeight: 500, transition: 'var(--transition)' }}>
             Reviews
           </a>
         </nav>
@@ -128,22 +131,25 @@ export default function Navbar({ onOpenInquiry }) {
           flexDirection: 'column',
           gap: '1rem'
         }}>
-          <a href="#visual-attractions" onClick={() => setMobileMenuOpen(false)} style={{ color: '#fbbf24', textDecoration: 'none', fontSize: '1rem', padding: '0.5rem 0', fontWeight: 600 }}>
+          <a href="/about" onClick={() => setMobileMenuOpen(false)} style={{ color: '#34d399', textDecoration: 'none', fontSize: '1rem', padding: '0.5rem 0', fontWeight: 700 }}>
+            <i className="fa-solid fa-building-columns" style={{ width: '24px', color: '#34d399' }}></i> About Sandesh Travels
+          </a>
+          <a href="/#visual-attractions" onClick={() => setMobileMenuOpen(false)} style={{ color: '#fbbf24', textDecoration: 'none', fontSize: '1rem', padding: '0.5rem 0', fontWeight: 600 }}>
             <i className="fa-solid fa-camera-retro" style={{ width: '24px', color: '#fbbf24' }}></i> Visual Attractions
           </a>
-          <a href="#packages" onClick={() => setMobileMenuOpen(false)} style={{ color: '#fff', textDecoration: 'none', fontSize: '1rem', padding: '0.5rem 0' }}>
+          <a href="/#packages" onClick={() => setMobileMenuOpen(false)} style={{ color: '#fff', textDecoration: 'none', fontSize: '1rem', padding: '0.5rem 0' }}>
             <i className="fa-solid fa-map-location-dot" style={{ width: '24px', color: 'var(--primary)' }}></i> Tour Packages
           </a>
-          <a href="#custom-planner" onClick={() => setMobileMenuOpen(false)} style={{ color: '#fff', textDecoration: 'none', fontSize: '1rem', padding: '0.5rem 0' }}>
+          <a href="/#custom-planner" onClick={() => setMobileMenuOpen(false)} style={{ color: '#fff', textDecoration: 'none', fontSize: '1rem', padding: '0.5rem 0' }}>
             <i className="fa-solid fa-sliders" style={{ width: '24px', color: 'var(--accent-teal)' }}></i> Custom Planner
           </a>
-          <a href="#fleet" onClick={() => setMobileMenuOpen(false)} style={{ color: '#fff', textDecoration: 'none', fontSize: '1rem', padding: '0.5rem 0' }}>
+          <a href="/#fleet" onClick={() => setMobileMenuOpen(false)} style={{ color: '#fff', textDecoration: 'none', fontSize: '1rem', padding: '0.5rem 0' }}>
             <i className="fa-solid fa-car" style={{ width: '24px', color: 'var(--accent-gold)' }}></i> Fleet & Cabs
           </a>
-          <a href="#permits" onClick={() => setMobileMenuOpen(false)} style={{ color: '#fff', textDecoration: 'none', fontSize: '1rem', padding: '0.5rem 0' }}>
+          <a href="/#permits" onClick={() => setMobileMenuOpen(false)} style={{ color: '#fff', textDecoration: 'none', fontSize: '1rem', padding: '0.5rem 0' }}>
             <i className="fa-solid fa-passport" style={{ width: '24px', color: 'var(--secondary)' }}></i> Permits & FAQ
           </a>
-          <a href="#reviews" onClick={() => setMobileMenuOpen(false)} style={{ color: '#fff', textDecoration: 'none', fontSize: '1rem', padding: '0.5rem 0' }}>
+          <a href="/#reviews" onClick={() => setMobileMenuOpen(false)} style={{ color: '#fff', textDecoration: 'none', fontSize: '1rem', padding: '0.5rem 0' }}>
             <i className="fa-solid fa-star" style={{ width: '24px', color: '#fbbf24' }}></i> Reviews
           </a>
 

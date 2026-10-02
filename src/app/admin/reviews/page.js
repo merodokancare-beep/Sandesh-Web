@@ -101,7 +101,7 @@ export default function AdminReviewsPage() {
       setIsAuthenticated(true);
       setPinError('');
     } else {
-      setPinError('Invalid Admin Passcode. Try admin123 or sandesh2026');
+      setPinError('Invalid Admin Passcode. Please try again.');
     }
   };
 
@@ -271,7 +271,7 @@ export default function AdminReviewsPage() {
           <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <input
               type="password"
-              placeholder="Enter Admin Passcode (e.g. admin123)"
+              placeholder="Enter Admin Passcode"
               value={adminPin}
               onChange={(e) => setAdminPin(e.target.value)}
               required
@@ -806,6 +806,12 @@ export default function AdminReviewsPage() {
                             {lead.package_name && (
                               <span style={{ color: 'var(--accent-teal)' }}>
                                 <i className="fa-solid fa-map-pin" style={{ marginRight: '3px' }}></i> {lead.package_name}
+                              </span>
+                            )}
+                            {lead.travel_dates && lead.travel_dates.includes('Travelers:') && (
+                              <span style={{ color: '#38bdf8' }}>
+                                <i className="fa-solid fa-users" style={{ marginRight: '3px' }}></i>
+                                {lead.travel_dates.split('Travelers:')[1]?.split(']')[0]?.trim()}
                               </span>
                             )}
                           </div>

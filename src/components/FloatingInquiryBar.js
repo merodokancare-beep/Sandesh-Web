@@ -10,7 +10,9 @@ export default function FloatingInquiryBar({ onSuccessLead }) {
     clientPhone: '',
     region: 'North Sikkim (Gurudongmar & Yumthang)',
     startDate: '',
-    numTravelers: '2'
+    numAdults: '2',
+    numChildren: '0',
+    childrenAges: []
   });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -31,12 +33,40 @@ export default function FloatingInquiryBar({ onSuccessLead }) {
 
   if (!visible) return null;
 
+  const handleChildrenCountChange = (value) => {
+    const count = parseInt(value, 10) || 0;
+    const currentAges = [...formData.childrenAges];
+    const updatedAges = [];
+    for (let i = 0; i < count; i++) {
+      updatedAges.push(currentAges[i] || '5 Years');
+    }
+    setFormData(prev => ({
+      ...prev,
+      numChildren: value,
+      childrenAges: updatedAges
+    }));
+  };
+
+  const handleChildAgeChange = (index, age) => {
+    const updatedAges = [...formData.childrenAges];
+    updatedAges[index] = age;
+    setFormData(prev => ({
+      ...prev,
+      childrenAges: updatedAges
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.clientName || !formData.clientPhone) {
       alert('Please enter your name and phone number.');
       return;
     }
+
+    const adultsNum = parseInt(formData.numAdults, 10) || 2;
+    const childrenNum = parseInt(formData.numChildren, 10) || 0;
+    const totalTravelers = adultsNum + childrenNum;
+    const childAgesSummary = childrenNum > 0 ? formData.childrenAges.slice(0, childrenNum).join(', ') : '';
 
     setSubmitting(true);
     try {
@@ -47,10 +77,13 @@ export default function FloatingInquiryBar({ onSuccessLead }) {
           clientName: formData.clientName,
           clientPhone: formData.clientPhone,
           startDate: formData.startDate || null,
-          numTravelers: parseInt(formData.numTravelers, 10) || 2,
+          numTravelers: totalTravelers,
+          numAdults: adultsNum,
+          numChildren: childrenNum,
+          childrenAges: formData.childrenAges.slice(0, childrenNum),
           travelDates: formData.startDate ? `Starts on ${formData.startDate}` : 'Flexible Dates',
           packageName: `Floating Bar: ${formData.region}`,
-          notes: `Region: ${formData.region} (Captured from floating bar)`
+          notes: `Region: ${formData.region} (Captured from floating bar)${childrenNum > 0 ? ` | Children: ${childrenNum} (Ages: ${childAgesSummary})` : ''}`
         })
       });
 
@@ -190,18 +223,40 @@ export default function FloatingInquiryBar({ onSuccessLead }) {
                   />
                 </div>
 
-                {/* Travelers */}
+                {/* Adults */}
                 <div>
                   <select
                     className="form-select"
                     style={{ padding: '0.6rem 0.8rem', fontSize: '0.85rem', height: '40px' }}
-                    value={formData.numTravelers}
-                    onChange={(e) => setFormData({ ...formData, numTravelers: e.target.value })}
+                    value={formData.numAdults}
+                    onChange={(e) => setFormData({ ...formData, numAdults: e.target.value })}
                   >
-                    <option value="2">2 Travelers (Couple)</option>
-                    <option value="4">3-4 Travelers (Family)</option>
-                    <option value="6">5-6 Travelers (SUV)</option>
-                    <option value="10">7-12+ (Tempo)</option>
+                    <option value="1">1 Adult</option>
+                    <option value="2">2 Adults (Couple)</option>
+                    <option value="3">3 Adults</option>
+                    <option value="4">4 Adults</option>
+                    <option value="6">5-6 Adults</option>
+                    <option value="10">7-10+ (Tempo)</option>
+                  </select>
+                </div>
+
+                {/* Children */}
+                <div>
+                  <select
+                    className="form-select"
+                    style={{
+                      padding: '0.6rem 0.8rem',
+                      fontSize: '0.85rem',
+                      height: '40px',
+                      borderColor: parseInt(formData.numChildren, 10) > 0 ? '#38bdf8' : undefined
+                    }}
+                    value={formData.numChildren}
+                    onChange={(e) => handleChildrenCountChange(e.target.value)}
+                  >
+                    <option value="0">0 Kids</option>
+                    <option value="1">1 Child</option>
+                    <option value="2">2 Kids</option>
+                    <option value="3">3 Kids</option>
                   </select>
                 </div>
 
@@ -249,6 +304,57 @@ export default function FloatingInquiryBar({ onSuccessLead }) {
                     )}
                   </button>
                 </div>
+
+                {/* Floating Bar Child Ages row when children > 0 */}
+                {parseInt(formData.numChildren, 10) > 0 && (
+                  <div style={{
+                    gridColumn: '1 / -1',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    flexWrap: 'wrap',
+                    background: 'rgba(56, 189, 248, 0.1)',
+                    border: '1px solid rgba(56, 189, 248, 0.3)',
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '0.5rem 0.85rem',
+                    marginTop: '0.25rem'
+                  }}>
+                    <span style={{ fontSize: '0.78rem', color: '#38bdf8', fontWeight: 600 }}>
+                      <i className="fa-solid fa-child" style={{ marginRight: '4px' }}></i> Child Ages:
+                    </span>
+                    {Array.from({ length: parseInt(formData.numChildren, 10) }).map((_, idx) => (
+                      <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>Child {idx + 1}:</span>
+                        <select
+                          className="form-select"
+                          value={formData.childrenAges[idx] || '5 Years'}
+                          onChange={(e) => handleChildAgeChange(idx, e.target.value)}
+                          style={{
+                            height: '32px',
+                            padding: '0.2rem 0.5rem',
+                            fontSize: '0.78rem',
+                            background: '#0b111e',
+                            minWidth: '100px'
+                          }}
+                        >
+                          <option value="Under 2 (Infant)">Under 2 (Infant)</option>
+                          <option value="2 Years">2 Years</option>
+                          <option value="3 Years">3 Years</option>
+                          <option value="4 Years">4 Years</option>
+                          <option value="5 Years">5 Years</option>
+                          <option value="6 Years">6 Years</option>
+                          <option value="7 Years">7 Years</option>
+                          <option value="8 Years">8 Years</option>
+                          <option value="9 Years">9 Years</option>
+                          <option value="10 Years">10 Years</option>
+                          <option value="11 Years">11 Years</option>
+                          <option value="12 Years">12 Years</option>
+                          <option value="13-17 (Teen)">13-17 (Teen)</option>
+                        </select>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </form>
             )}
           </div>

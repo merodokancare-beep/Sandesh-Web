@@ -79,6 +79,9 @@ async function ensureSchema() {
         try {
           await pool.query(`
             ALTER TABLE leads ADD COLUMN IF NOT EXISTS start_date TEXT;
+            ALTER TABLE leads ADD COLUMN IF NOT EXISTS num_adults INTEGER DEFAULT 2;
+            ALTER TABLE leads ADD COLUMN IF NOT EXISTS num_children INTEGER DEFAULT 0;
+            ALTER TABLE leads ADD COLUMN IF NOT EXISTS children_ages TEXT;
             ALTER TABLE leads ALTER COLUMN travel_dates TYPE TEXT;
             ALTER TABLE leads ALTER COLUMN client_phone TYPE VARCHAR(100);
             ALTER TABLE leads ALTER COLUMN client_name TYPE VARCHAR(255);

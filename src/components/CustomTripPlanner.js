@@ -11,6 +11,9 @@ export default function CustomTripPlanner({ onSuccessLead }) {
     vehicle: 'Toyota Innova Crysta / Luxury SUV',
     hotelCategory: 'Deluxe Himalayan Resort (3-Star & 4-Star)',
     travelersCount: 2,
+    adultsCount: 2,
+    childrenCount: 0,
+    childrenAges: [],
     clientName: '',
     clientPhone: '',
     specialNotes: ''
@@ -44,6 +47,30 @@ export default function CustomTripPlanner({ onSuccessLead }) {
     }
   };
 
+  const handleChildrenCountChange = (count) => {
+    const num = Math.max(0, parseInt(count, 10) || 0);
+    const currentAges = [...plan.childrenAges];
+    const updatedAges = [];
+    for (let i = 0; i < num; i++) {
+      updatedAges.push(currentAges[i] || '5 Years');
+    }
+    setPlan(prev => ({
+      ...prev,
+      childrenCount: num,
+      childrenAges: updatedAges,
+      travelersCount: (parseInt(prev.adultsCount, 10) || 2) + num
+    }));
+  };
+
+  const handleChildAgeChange = (index, age) => {
+    const updatedAges = [...plan.childrenAges];
+    updatedAges[index] = age;
+    setPlan(prev => ({
+      ...prev,
+      childrenAges: updatedAges
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!plan.clientName || !plan.clientPhone) {
@@ -51,9 +78,14 @@ export default function CustomTripPlanner({ onSuccessLead }) {
       return;
     }
 
+    const adultsNum = parseInt(plan.adultsCount, 10) || 2;
+    const childrenNum = parseInt(plan.childrenCount, 10) || 0;
+    const totalTravelers = adultsNum + childrenNum;
+    const childAgesSummary = childrenNum > 0 ? plan.childrenAges.slice(0, childrenNum).join(', ') : '';
+
     setSubmitting(true);
     try {
-      const notes = `Custom Tour Plan: ${plan.destinations.join(', ')} | Vehicle: ${plan.vehicle} | Hotel: ${plan.hotelCategory} | Duration: ${plan.daysCount} Days | Notes: ${plan.specialNotes || 'None'}`;
+      const notes = `Custom Tour Plan: ${plan.destinations.join(', ')} | Vehicle: ${plan.vehicle} | Hotel: ${plan.hotelCategory} | Duration: ${plan.daysCount} Days${childrenNum > 0 ? ` | Children: ${childrenNum} (Ages: ${childAgesSummary})` : ''} | Notes: ${plan.specialNotes || 'None'}`;
 
       const res = await fetch('/api/leads', {
         method: 'POST',
@@ -62,7 +94,10 @@ export default function CustomTripPlanner({ onSuccessLead }) {
           clientName: plan.clientName,
           clientPhone: plan.clientPhone,
           startDate: plan.startDate || null,
-          numTravelers: parseInt(plan.travelersCount, 10) || 2,
+          numTravelers: totalTravelers,
+          numAdults: adultsNum,
+          numChildren: childrenNum,
+          childrenAges: plan.childrenAges.slice(0, childrenNum),
           travelDates: `${plan.daysCount} Days (${plan.startDate ? 'Starting ' + plan.startDate : 'Flexible Dates'})`,
           packageName: `Custom Trip Planner (${plan.destinations.length} Regions)`,
           vehicleType: plan.vehicle,
@@ -128,7 +163,7 @@ export default function CustomTripPlanner({ onSuccessLead }) {
               </p>
               <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                 <a
-                  href={`https://wa.me/919647878373?text=${encodeURIComponent(`Hi Sandesh Travels, I just built a custom ${plan.daysCount}-day itinerary for ${plan.destinations.join(', ')}. My phone is ${plan.clientPhone}.`)}`}
+                  href={`https://wa.me/919647878373?text=${encodeURIComponent(`Hi Sandesh Travels, I just built a custom ${plan.daysCount}-day itinerary for ${plan.destinations.join(', ')}. Travelers: ${plan.adultsCount} Adults${plan.childrenCount > 0 ? `, ${plan.childrenCount} Children (Ages: ${plan.childrenAges.slice(0, plan.childrenCount).join(', ')})` : ''}. My phone is ${plan.clientPhone}.`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn btn-whatsapp"
@@ -302,17 +337,84 @@ export default function CustomTripPlanner({ onSuccessLead }) {
                     </div>
 
                     <div className="form-group">
-                      <label className="form-label">Total Number of Travelers:</label>
+                      <label className="form-label">Adults (12+ yrs):</label>
                       <input
                         type="number"
                         min="1"
                         max="50"
                         className="form-input"
-                        value={plan.travelersCount}
-                        onChange={(e) => setPlan({ ...plan, travelersCount: e.target.value })}
+                        value={plan.adultsCount}
+                        onChange={(e) => {
+                          const val = Math.max(1, parseInt(e.target.value, 10) || 1);
+                          setPlan({
+                            ...plan,
+                            adultsCount: val,
+                            travelersCount: val + (parseInt(plan.childrenCount, 10) || 0)
+                          });
+                        }}
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Children (0-11 yrs):</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="20"
+                        className="form-input"
+                        value={plan.childrenCount}
+                        onChange={(e) => handleChildrenCountChange(e.target.value)}
                       />
                     </div>
                   </div>
+
+                  {/* Child Ages for Custom Trip Planner */}
+                  {plan.childrenCount > 0 && (
+                    <div style={{
+                      background: 'rgba(56, 189, 248, 0.08)',
+                      border: '1px solid rgba(56, 189, 248, 0.25)',
+                      borderRadius: 'var(--radius-sm)',
+                      padding: '0.85rem 1rem',
+                      marginTop: '1rem',
+                      marginBottom: '1rem'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.6rem', flexWrap: 'wrap', gap: '0.25rem' }}>
+                        <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <i className="fa-solid fa-child-reaching"></i> Ages of Children (Required for High-Altitude Permits):
+                        </span>
+                        <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                          Lachen & Gurudongmar permit guidelines apply
+                        </span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.65rem' }}>
+                        {Array.from({ length: plan.childrenCount }).map((_, idx) => (
+                          <div key={idx}>
+                            <label style={{ fontSize: '0.75rem', color: '#cbd5e1', marginBottom: '3px', display: 'block' }}>
+                              Child {idx + 1} Age *
+                            </label>
+                            <select
+                              className="form-select"
+                              value={plan.childrenAges[idx] || '5 Years'}
+                              onChange={(e) => handleChildAgeChange(idx, e.target.value)}
+                              style={{ fontSize: '0.85rem', height: '36px', padding: '0.35rem 0.65rem' }}
+                            >
+                              <option value="Under 2 (Infant)">Under 2 yrs (Infant)</option>
+                              <option value="2 Years">2 Years</option>
+                              <option value="3 Years">3 Years</option>
+                              <option value="4 Years">4 Years</option>
+                              <option value="5 Years">5 Years</option>
+                              <option value="6 Years">6 Years</option>
+                              <option value="7 Years">7 Years</option>
+                              <option value="8 Years">8 Years</option>
+                              <option value="9 Years">9 Years</option>
+                              <option value="10 Years">10 Years</option>
+                              <option value="11 Years">11 Years</option>
+                            </select>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <button
@@ -366,7 +468,10 @@ export default function CustomTripPlanner({ onSuccessLead }) {
                     </div>
                     <div>
                       <span style={{ color: 'var(--text-muted)' }}>Travelers: </span>
-                      <strong>{plan.travelersCount} Person(s)</strong>
+                      <strong>
+                        {plan.adultsCount} Adult(s)
+                        {plan.childrenCount > 0 ? `, ${plan.childrenCount} Child(ren) (Ages: ${plan.childrenAges.slice(0, plan.childrenCount).join(', ')})` : ''}
+                      </strong>
                     </div>
                   </div>
 

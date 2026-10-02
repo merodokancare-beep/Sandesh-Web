@@ -12,10 +12,10 @@ import CustomTripPlanner from '@/components/CustomTripPlanner';
 import SeasonalGuide from '@/components/SeasonalGuide';
 import FleetShowcase from '@/components/FleetShowcase';
 import PermitGuide from '@/components/PermitGuide';
+import AboutSection from '@/components/AboutSection';
 import ReviewsSection from '@/components/ReviewsSection';
 import Footer from '@/components/Footer';
 import WhatsAppWidget from '@/components/WhatsAppWidget';
-import FloatingInquiryBar from '@/components/FloatingInquiryBar';
 import InquiryModal from '@/components/InquiryModal';
 import ReviewModal from '@/components/ReviewModal';
 
@@ -106,6 +106,9 @@ export default function Home() {
       {/* 20+ Vehicles Fleet Showcase */}
       <FleetShowcase onOpenInquiry={handleOpenInquiry} />
 
+      {/* Official Government Credentials & Company Overview */}
+      <AboutSection onOpenInquiry={handleOpenInquiry} />
+
       {/* Sikkim Permits & FAQs */}
       <PermitGuide />
 
@@ -117,9 +120,6 @@ export default function Home() {
 
       {/* Floating 24/7 WhatsApp Widget */}
       <WhatsAppWidget />
-
-      {/* Sticky Floating Quick Inquiry Bar */}
-      <FloatingInquiryBar onSuccessLead={handleSuccessLead} />
 
       {/* Context-aware Lead Inquiry Modal */}
       <InquiryModal

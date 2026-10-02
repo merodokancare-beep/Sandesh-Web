@@ -7,7 +7,9 @@ export default function InquiryModal({ isOpen, onClose, initialPackageName, onSu
     clientName: '',
     clientPhone: '',
     startDate: '',
-    numTravelers: '2',
+    numAdults: '2',
+    numChildren: '0',
+    childrenAges: [],
     notes: '',
     packageName: initialPackageName || ''
   });
@@ -21,6 +23,29 @@ export default function InquiryModal({ isOpen, onClose, initialPackageName, onSu
     setSubmitted(false);
   }, [initialPackageName, isOpen]);
 
+  const handleChildrenCountChange = (value) => {
+    const count = parseInt(value, 10) || 0;
+    const currentAges = [...formData.childrenAges];
+    const updatedAges = [];
+    for (let i = 0; i < count; i++) {
+      updatedAges.push(currentAges[i] || '5 Years');
+    }
+    setFormData(prev => ({
+      ...prev,
+      numChildren: value,
+      childrenAges: updatedAges
+    }));
+  };
+
+  const handleChildAgeChange = (index, age) => {
+    const updatedAges = [...formData.childrenAges];
+    updatedAges[index] = age;
+    setFormData(prev => ({
+      ...prev,
+      childrenAges: updatedAges
+    }));
+  };
+
   if (!isOpen) return null;
 
   const handleSubmit = async (e) => {
@@ -29,6 +54,11 @@ export default function InquiryModal({ isOpen, onClose, initialPackageName, onSu
       alert('Please fill in your name and phone number.');
       return;
     }
+
+    const adultsNum = parseInt(formData.numAdults, 10) || 2;
+    const childrenNum = parseInt(formData.numChildren, 10) || 0;
+    const totalTravelers = adultsNum + childrenNum;
+    const childAgesSummary = childrenNum > 0 ? formData.childrenAges.slice(0, childrenNum).join(', ') : '';
 
     setSubmitting(true);
     try {
@@ -39,10 +69,13 @@ export default function InquiryModal({ isOpen, onClose, initialPackageName, onSu
           clientName: formData.clientName,
           clientPhone: formData.clientPhone,
           startDate: formData.startDate || null,
-          numTravelers: parseInt(formData.numTravelers, 10) || 2,
+          numTravelers: totalTravelers,
+          numAdults: adultsNum,
+          numChildren: childrenNum,
+          childrenAges: formData.childrenAges.slice(0, childrenNum),
           travelDates: formData.startDate ? `Travel Date: ${formData.startDate}` : 'Flexible Dates',
           packageName: formData.packageName,
-          notes: formData.notes
+          notes: `${formData.notes || ''}${childrenNum > 0 ? ` [Children: ${childrenNum} (Ages: ${childAgesSummary})]` : ''}`.trim()
         })
       });
 
@@ -118,7 +151,7 @@ export default function InquiryModal({ isOpen, onClose, initialPackageName, onSu
 
             <div style={{ display: 'flex', gap: '0.75rem' }}>
               <a
-                href={`https://wa.me/919647878373?text=${encodeURIComponent(`Hi Sandesh Travels, I just submitted an inquiry for "${formData.packageName}". My name is ${formData.clientName}.`)}`}
+                href={`https://wa.me/919647878373?text=${encodeURIComponent(`Hi Sandesh Travels, I just submitted an inquiry for "${formData.packageName}". My name is ${formData.clientName}. Travelers: ${formData.numAdults} Adults${parseInt(formData.numChildren, 10) > 0 ? `, ${formData.numChildren} Children (Ages: ${formData.childrenAges.slice(0, parseInt(formData.numChildren, 10)).join(', ')})` : ''}.`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn-whatsapp"
@@ -174,7 +207,7 @@ export default function InquiryModal({ isOpen, onClose, initialPackageName, onSu
               />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.85rem' }}>
               <div className="form-group">
                 <label className="form-label">Tentative Date</label>
                 <input
@@ -187,23 +220,94 @@ export default function InquiryModal({ isOpen, onClose, initialPackageName, onSu
               </div>
 
               <div className="form-group">
-                <label className="form-label">Travelers Count</label>
+                <label className="form-label">
+                  <i className="fa-solid fa-users" style={{ color: 'var(--accent-gold)', marginRight: '4px' }}></i> Adults (12+ yrs)
+                </label>
                 <select
                   className="form-select"
-                  value={formData.numTravelers}
-                  onChange={(e) => setFormData({ ...formData, numTravelers: e.target.value })}
+                  value={formData.numAdults}
+                  onChange={(e) => setFormData({ ...formData, numAdults: e.target.value })}
                 >
-                  <option value="1">1 Person</option>
-                  <option value="2">2 Persons (Couple)</option>
-                  <option value="3">3 Persons</option>
-                  <option value="4">4 Persons</option>
-                  <option value="5">5 Persons</option>
-                  <option value="6">6 Persons (SUV Group)</option>
-                  <option value="8">7-10 Persons</option>
-                  <option value="15">10+ Persons (Tempo)</option>
+                  <option value="1">1 Adult (Solo)</option>
+                  <option value="2">2 Adults (Couple)</option>
+                  <option value="3">3 Adults</option>
+                  <option value="4">4 Adults</option>
+                  <option value="5">5 Adults</option>
+                  <option value="6">6 Adults (SUV)</option>
+                  <option value="8">7-8 Adults</option>
+                  <option value="12">9-12+ Adults</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">
+                  <i className="fa-solid fa-child" style={{ color: '#38bdf8', marginRight: '4px' }}></i> Children (0-11 yrs)
+                </label>
+                <select
+                  className="form-select"
+                  value={formData.numChildren}
+                  onChange={(e) => handleChildrenCountChange(e.target.value)}
+                  style={{
+                    borderColor: parseInt(formData.numChildren, 10) > 0 ? '#38bdf8' : undefined
+                  }}
+                >
+                  <option value="0">0 Children</option>
+                  <option value="1">1 Child</option>
+                  <option value="2">2 Children</option>
+                  <option value="3">3 Children</option>
+                  <option value="4">4 Children</option>
+                  <option value="5">5 Children</option>
                 </select>
               </div>
             </div>
+
+            {/* Dynamic Child Ages in Modal */}
+            {parseInt(formData.numChildren, 10) > 0 && (
+              <div style={{
+                background: 'rgba(56, 189, 248, 0.08)',
+                border: '1px solid rgba(56, 189, 248, 0.25)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '0.85rem 1rem'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.6rem', flexWrap: 'wrap', gap: '0.25rem' }}>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <i className="fa-solid fa-child-reaching"></i> Age of Children (Required for Permits & Cab Seating):
+                  </span>
+                  <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                    Guidelines apply for high altitude permits
+                  </span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.65rem' }}>
+                  {Array.from({ length: parseInt(formData.numChildren, 10) }).map((_, idx) => (
+                    <div key={idx}>
+                      <label style={{ fontSize: '0.75rem', color: '#cbd5e1', marginBottom: '3px', display: 'block' }}>
+                        Child {idx + 1} Age *
+                      </label>
+                      <select
+                        className="form-select"
+                        value={formData.childrenAges[idx] || '5 Years'}
+                        onChange={(e) => handleChildAgeChange(idx, e.target.value)}
+                        style={{ fontSize: '0.85rem', height: '36px', padding: '0.35rem 0.65rem' }}
+                      >
+                        <option value="Under 2 (Infant)">Under 2 yrs (Infant)</option>
+                        <option value="2 Years">2 Years</option>
+                        <option value="3 Years">3 Years</option>
+                        <option value="4 Years">4 Years</option>
+                        <option value="5 Years">5 Years</option>
+                        <option value="6 Years">6 Years</option>
+                        <option value="7 Years">7 Years</option>
+                        <option value="8 Years">8 Years</option>
+                        <option value="9 Years">9 Years</option>
+                        <option value="10 Years">10 Years</option>
+                        <option value="11 Years">11 Years</option>
+                        <option value="12 Years">12 Years</option>
+                        <option value="13-17 (Teen)">13-17 yrs (Teen)</option>
+                      </select>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="form-group">
               <label className="form-label">Notes / Specific Requirements (Optional)</label>
