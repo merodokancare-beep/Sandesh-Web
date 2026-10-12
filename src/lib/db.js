@@ -58,6 +58,23 @@ async function ensureSchema() {
             is_approved BOOLEAN DEFAULT FALSE,
             created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
           );
+
+          CREATE TABLE IF NOT EXISTS lead_payments (
+            id SERIAL PRIMARY KEY,
+            lead_id INTEGER NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
+            payment_type VARCHAR(50) NOT NULL DEFAULT 'advance',
+            title VARCHAR(255) NOT NULL,
+            amount NUMERIC(10, 2) NOT NULL DEFAULT 0,
+            payment_method VARCHAR(50) DEFAULT 'cash',
+            transaction_ref VARCHAR(255),
+            payment_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            recorded_by INTEGER,
+            recorded_by_name VARCHAR(255),
+            notes TEXT,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+          );
+
+          CREATE INDEX IF NOT EXISTS idx_lead_payments_lead_id ON lead_payments(lead_id);
         `);
 
         // Check if reviews table is empty, if so seed initial approved reviews
@@ -79,8 +96,11 @@ async function ensureSchema() {
         try {
           await pool.query(`
             ALTER TABLE leads ADD COLUMN IF NOT EXISTS start_date TEXT;
+            ALTER TABLE leads ADD COLUMN IF NOT EXISTS end_date TEXT;
             ALTER TABLE leads ADD COLUMN IF NOT EXISTS num_adults INTEGER DEFAULT 2;
             ALTER TABLE leads ADD COLUMN IF NOT EXISTS num_children INTEGER DEFAULT 0;
+            ALTER TABLE leads ADD COLUMN IF NOT EXISTS num_elderly INTEGER DEFAULT 0;
+            ALTER TABLE leads ADD COLUMN IF NOT EXISTS elderly INTEGER DEFAULT 0;
             ALTER TABLE leads ADD COLUMN IF NOT EXISTS children_ages TEXT;
             ALTER TABLE leads ALTER COLUMN travel_dates TYPE TEXT;
             ALTER TABLE leads ALTER COLUMN client_phone TYPE VARCHAR(100);

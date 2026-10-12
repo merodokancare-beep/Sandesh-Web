@@ -10,8 +10,10 @@ export default function FloatingInquiryBar({ onSuccessLead }) {
     clientPhone: '',
     region: 'North Sikkim (Gurudongmar & Yumthang)',
     startDate: '',
+    endDate: '',
     numAdults: '2',
     numChildren: '0',
+    numElderly: '0',
     childrenAges: []
   });
   const [submitting, setSubmitting] = useState(false);
@@ -32,6 +34,16 @@ export default function FloatingInquiryBar({ onSuccessLead }) {
   }, []);
 
   if (!visible) return null;
+
+  const handleStartDateChange = (val) => {
+    setFormData(prev => {
+      const next = { ...prev, startDate: val };
+      if (prev.endDate && prev.endDate < val) {
+        next.endDate = val;
+      }
+      return next;
+    });
+  };
 
   const handleChildrenCountChange = (value) => {
     const count = parseInt(value, 10) || 0;
@@ -65,8 +77,21 @@ export default function FloatingInquiryBar({ onSuccessLead }) {
 
     const adultsNum = parseInt(formData.numAdults, 10) || 2;
     const childrenNum = parseInt(formData.numChildren, 10) || 0;
-    const totalTravelers = adultsNum + childrenNum;
+    const elderlyNum = parseInt(formData.numElderly, 10) || 0;
+    const totalTravelers = adultsNum + childrenNum + elderlyNum;
     const childAgesSummary = childrenNum > 0 ? formData.childrenAges.slice(0, childrenNum).join(', ') : '';
+
+    const travelerBreakdown = [];
+    if (adultsNum > 0) travelerBreakdown.push(`${adultsNum} Adult(s)`);
+    if (childrenNum > 0) travelerBreakdown.push(`${childrenNum} Child(ren)`);
+    if (elderlyNum > 0) travelerBreakdown.push(`${elderlyNum} Senior(s) (60+)`);
+
+    let datesSummary = 'Flexible Dates';
+    if (formData.startDate && formData.endDate) {
+      datesSummary = `${formData.startDate} to ${formData.endDate}`;
+    } else if (formData.startDate) {
+      datesSummary = `Starts on ${formData.startDate}`;
+    }
 
     setSubmitting(true);
     try {
@@ -77,13 +102,15 @@ export default function FloatingInquiryBar({ onSuccessLead }) {
           clientName: formData.clientName,
           clientPhone: formData.clientPhone,
           startDate: formData.startDate || null,
+          endDate: formData.endDate || null,
           numTravelers: totalTravelers,
           numAdults: adultsNum,
           numChildren: childrenNum,
+          numElderly: elderlyNum,
           childrenAges: formData.childrenAges.slice(0, childrenNum),
-          travelDates: formData.startDate ? `Starts on ${formData.startDate}` : 'Flexible Dates',
+          travelDates: datesSummary,
           packageName: `Floating Bar: ${formData.region}`,
-          notes: `Region: ${formData.region} (Captured from floating bar)${childrenNum > 0 ? ` | Children: ${childrenNum} (Ages: ${childAgesSummary})` : ''}`
+          notes: `Region: ${formData.region} (Captured from floating bar) | Travelers: ${travelerBreakdown.join(', ')}${childrenNum > 0 ? ` (Child Ages: ${childAgesSummary})` : ''}${elderlyNum > 0 ? ' [Senior citizen care]' : ''}`
         })
       });
 
@@ -210,16 +237,31 @@ export default function FloatingInquiryBar({ onSuccessLead }) {
                   </select>
                 </div>
 
-                {/* Date */}
+                {/* Start Date */}
                 <div>
                   <input
                     type="date"
                     className="form-input"
                     style={{ padding: '0.6rem 0.8rem', fontSize: '0.85rem', height: '40px' }}
                     value={formData.startDate}
-                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                    onChange={(e) => handleStartDateChange(e.target.value)}
                     min={new Date().toISOString().split('T')[0]}
-                    placeholder="Travel Date"
+                    placeholder="Start Date"
+                    title="Travel Start Date"
+                  />
+                </div>
+
+                {/* End Date */}
+                <div>
+                  <input
+                    type="date"
+                    className="form-input"
+                    style={{ padding: '0.6rem 0.8rem', fontSize: '0.85rem', height: '40px' }}
+                    value={formData.endDate}
+                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                    min={formData.startDate || new Date().toISOString().split('T')[0]}
+                    placeholder="End Date"
+                    title="Travel End Date"
                   />
                 </div>
 
@@ -230,9 +272,10 @@ export default function FloatingInquiryBar({ onSuccessLead }) {
                     style={{ padding: '0.6rem 0.8rem', fontSize: '0.85rem', height: '40px' }}
                     value={formData.numAdults}
                     onChange={(e) => setFormData({ ...formData, numAdults: e.target.value })}
+                    title="Adults (12-59 yrs)"
                   >
                     <option value="1">1 Adult</option>
-                    <option value="2">2 Adults (Couple)</option>
+                    <option value="2">2 Adults</option>
                     <option value="3">3 Adults</option>
                     <option value="4">4 Adults</option>
                     <option value="6">5-6 Adults</option>
@@ -252,11 +295,33 @@ export default function FloatingInquiryBar({ onSuccessLead }) {
                     }}
                     value={formData.numChildren}
                     onChange={(e) => handleChildrenCountChange(e.target.value)}
+                    title="Children (0-11 yrs)"
                   >
                     <option value="0">0 Kids</option>
                     <option value="1">1 Child</option>
                     <option value="2">2 Kids</option>
                     <option value="3">3 Kids</option>
+                  </select>
+                </div>
+
+                {/* Elderly */}
+                <div>
+                  <select
+                    className="form-select"
+                    style={{
+                      padding: '0.6rem 0.8rem',
+                      fontSize: '0.85rem',
+                      height: '40px',
+                      borderColor: parseInt(formData.numElderly, 10) > 0 ? 'var(--accent-gold)' : undefined
+                    }}
+                    value={formData.numElderly}
+                    onChange={(e) => setFormData({ ...formData, numElderly: e.target.value })}
+                    title="Elderly / Seniors (60+ yrs)"
+                  >
+                    <option value="0">0 Seniors</option>
+                    <option value="1">1 Senior (60+)</option>
+                    <option value="2">2 Seniors (60+)</option>
+                    <option value="3">3+ Seniors</option>
                   </select>
                 </div>
 
@@ -353,6 +418,26 @@ export default function FloatingInquiryBar({ onSuccessLead }) {
                         </select>
                       </div>
                     ))}
+                  </div>
+                )}
+
+                {/* Floating Bar Senior Care Alert when elderly > 0 */}
+                {parseInt(formData.numElderly, 10) > 0 && (
+                  <div style={{
+                    gridColumn: '1 / -1',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.6rem',
+                    background: 'rgba(245, 158, 11, 0.1)',
+                    border: '1px solid rgba(245, 158, 11, 0.3)',
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '0.45rem 0.85rem',
+                    marginTop: '0.25rem',
+                    fontSize: '0.78rem',
+                    color: '#fbbf24'
+                  }}>
+                    <i className="fa-solid fa-heart-pulse"></i>
+                    <span><strong>Senior Citizen Care:</strong> Middle-row cab seating & relaxed acclimatization arranged.</span>
                   </div>
                 )}
               </form>

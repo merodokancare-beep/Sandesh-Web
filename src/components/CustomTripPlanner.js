@@ -8,11 +8,13 @@ export default function CustomTripPlanner({ onSuccessLead }) {
     destinations: ['North Sikkim (Gurudongmar/Lachung)'],
     daysCount: 5,
     startDate: '',
+    endDate: '',
     vehicle: 'Toyota Innova Crysta / Luxury SUV',
     hotelCategory: 'Deluxe Himalayan Resort (3-Star & 4-Star)',
     travelersCount: 2,
     adultsCount: 2,
     childrenCount: 0,
+    elderlyCount: 0,
     childrenAges: [],
     clientName: '',
     clientPhone: '',
@@ -47,6 +49,43 @@ export default function CustomTripPlanner({ onSuccessLead }) {
     }
   };
 
+  const handleDaysChange = (days) => {
+    setPlan(prev => {
+      const next = { ...prev, daysCount: days };
+      if (prev.startDate) {
+        const d = new Date(prev.startDate);
+        d.setDate(d.getDate() + days - 1);
+        next.endDate = d.toISOString().split('T')[0];
+      }
+      return next;
+    });
+  };
+
+  const handleStartDateChange = (val) => {
+    setPlan(prev => {
+      const next = { ...prev, startDate: val };
+      if (val && prev.daysCount) {
+        const d = new Date(val);
+        d.setDate(d.getDate() + prev.daysCount - 1);
+        next.endDate = d.toISOString().split('T')[0];
+      } else if (prev.endDate && prev.endDate < val) {
+        next.endDate = val;
+      }
+      return next;
+    });
+  };
+
+  const handleEndDateChange = (val) => {
+    setPlan(prev => {
+      const next = { ...prev, endDate: val };
+      if (prev.startDate && val) {
+        const diff = Math.round((new Date(val) - new Date(prev.startDate)) / (1000 * 3600 * 24)) + 1;
+        if (diff > 0) next.daysCount = diff;
+      }
+      return next;
+    });
+  };
+
   const handleChildrenCountChange = (count) => {
     const num = Math.max(0, parseInt(count, 10) || 0);
     const currentAges = [...plan.childrenAges];
@@ -58,7 +97,16 @@ export default function CustomTripPlanner({ onSuccessLead }) {
       ...prev,
       childrenCount: num,
       childrenAges: updatedAges,
-      travelersCount: (parseInt(prev.adultsCount, 10) || 2) + num
+      travelersCount: (parseInt(prev.adultsCount, 10) || 2) + num + (parseInt(prev.elderlyCount, 10) || 0)
+    }));
+  };
+
+  const handleElderlyCountChange = (count) => {
+    const num = Math.max(0, parseInt(count, 10) || 0);
+    setPlan(prev => ({
+      ...prev,
+      elderlyCount: num,
+      travelersCount: (parseInt(prev.adultsCount, 10) || 2) + (parseInt(prev.childrenCount, 10) || 0) + num
     }));
   };
 
@@ -80,12 +128,25 @@ export default function CustomTripPlanner({ onSuccessLead }) {
 
     const adultsNum = parseInt(plan.adultsCount, 10) || 2;
     const childrenNum = parseInt(plan.childrenCount, 10) || 0;
-    const totalTravelers = adultsNum + childrenNum;
+    const elderlyNum = parseInt(plan.elderlyCount, 10) || 0;
+    const totalTravelers = adultsNum + childrenNum + elderlyNum;
     const childAgesSummary = childrenNum > 0 ? plan.childrenAges.slice(0, childrenNum).join(', ') : '';
+
+    const travelerBreakdown = [];
+    if (adultsNum > 0) travelerBreakdown.push(`${adultsNum} Adults`);
+    if (childrenNum > 0) travelerBreakdown.push(`${childrenNum} Children (Ages: ${childAgesSummary || 'Not specified'})`);
+    if (elderlyNum > 0) travelerBreakdown.push(`${elderlyNum} Senior Citizens (60+)`);
+
+    let datesSummary = `${plan.daysCount} Days`;
+    if (plan.startDate && plan.endDate) {
+      datesSummary = `${plan.daysCount} Days (${plan.startDate} to ${plan.endDate})`;
+    } else if (plan.startDate) {
+      datesSummary = `${plan.daysCount} Days (Starting ${plan.startDate})`;
+    }
 
     setSubmitting(true);
     try {
-      const notes = `Custom Tour Plan: ${plan.destinations.join(', ')} | Vehicle: ${plan.vehicle} | Hotel: ${plan.hotelCategory} | Duration: ${plan.daysCount} Days${childrenNum > 0 ? ` | Children: ${childrenNum} (Ages: ${childAgesSummary})` : ''} | Notes: ${plan.specialNotes || 'None'}`;
+      const notes = `Custom Tour Plan: ${plan.destinations.join(', ')} | Vehicle: ${plan.vehicle} | Hotel: ${plan.hotelCategory} | Duration: ${plan.daysCount} Days | Travelers: ${travelerBreakdown.join(', ')}${elderlyNum > 0 ? ' [Requires senior-friendly seating/acclimatization]' : ''} | Notes: ${plan.specialNotes || 'None'}`;
 
       const res = await fetch('/api/leads', {
         method: 'POST',
@@ -94,11 +155,13 @@ export default function CustomTripPlanner({ onSuccessLead }) {
           clientName: plan.clientName,
           clientPhone: plan.clientPhone,
           startDate: plan.startDate || null,
+          endDate: plan.endDate || null,
           numTravelers: totalTravelers,
           numAdults: adultsNum,
           numChildren: childrenNum,
+          numElderly: elderlyNum,
           childrenAges: plan.childrenAges.slice(0, childrenNum),
-          travelDates: `${plan.daysCount} Days (${plan.startDate ? 'Starting ' + plan.startDate : 'Flexible Dates'})`,
+          travelDates: datesSummary,
           packageName: `Custom Trip Planner (${plan.destinations.length} Regions)`,
           vehicleType: plan.vehicle,
           notes: notes
@@ -163,7 +226,7 @@ export default function CustomTripPlanner({ onSuccessLead }) {
               </p>
               <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                 <a
-                  href={`https://wa.me/919647878373?text=${encodeURIComponent(`Hi Sandesh Travels, I just built a custom ${plan.daysCount}-day itinerary for ${plan.destinations.join(', ')}. Travelers: ${plan.adultsCount} Adults${plan.childrenCount > 0 ? `, ${plan.childrenCount} Children (Ages: ${plan.childrenAges.slice(0, plan.childrenCount).join(', ')})` : ''}. My phone is ${plan.clientPhone}.`)}`}
+                  href={`https://wa.me/919647878373?text=${encodeURIComponent(`Hi Sandesh Travels, I just built a custom ${plan.daysCount}-day itinerary for ${plan.destinations.join(', ')}.${plan.startDate ? ` Travel Dates: ${plan.startDate}${plan.endDate ? ` to ${plan.endDate}` : ''}.` : ''} Travelers: ${plan.adultsCount} Adults${plan.childrenCount > 0 ? `, ${plan.childrenCount} Children (Ages: ${plan.childrenAges.slice(0, plan.childrenCount).join(', ')})` : ''}${plan.elderlyCount > 0 ? `, ${plan.elderlyCount} Senior Citizens (60+)` : ''}. My phone is ${plan.clientPhone}.`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn btn-whatsapp"
@@ -183,8 +246,8 @@ export default function CustomTripPlanner({ onSuccessLead }) {
               {/* Step indicator */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem', position: 'relative' }}>
                 {[
-                  { num: 1, label: 'Destinations' },
-                  { num: 2, label: 'Vehicle & Stay' },
+                  { num: 1, label: 'Destinations & Dates' },
+                  { num: 2, label: 'Vehicle & Travelers' },
                   { num: 3, label: 'Contact & Submit' }
                 ].map((s) => (
                   <div key={s.num} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.35rem', zIndex: 2 }}>
@@ -215,7 +278,7 @@ export default function CustomTripPlanner({ onSuccessLead }) {
               {step === 1 && (
                 <div>
                   <h4 style={{ fontSize: '1.25rem', marginBottom: '1.25rem' }}>
-                    1. Select one or more regions to include:
+                    1. Select regions and travel dates:
                   </h4>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
                     {destinationOptions.map(dest => {
@@ -244,13 +307,15 @@ export default function CustomTripPlanner({ onSuccessLead }) {
                     })}
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
                     <div className="form-group">
-                      <label className="form-label">Total Trip Duration (Days):</label>
+                      <label className="form-label">
+                        <i className="fa-solid fa-clock" style={{ color: 'var(--accent-gold)', marginRight: '4px' }}></i> Total Trip Duration:
+                      </label>
                       <select
                         className="form-select"
                         value={plan.daysCount}
-                        onChange={(e) => setPlan({ ...plan, daysCount: parseInt(e.target.value, 10) })}
+                        onChange={(e) => handleDaysChange(parseInt(e.target.value, 10))}
                       >
                         <option value={3}>3 Days / 2 Nights (Short Escape)</option>
                         <option value={4}>4 Days / 3 Nights (Popular)</option>
@@ -262,13 +327,28 @@ export default function CustomTripPlanner({ onSuccessLead }) {
                     </div>
 
                     <div className="form-group">
-                      <label className="form-label">Tentative Start Date:</label>
+                      <label className="form-label">
+                        <i className="fa-regular fa-calendar-plus" style={{ color: 'var(--accent-teal)', marginRight: '4px' }}></i> Travel Start Date:
+                      </label>
                       <input
                         type="date"
                         className="form-input"
                         value={plan.startDate}
-                        onChange={(e) => setPlan({ ...plan, startDate: e.target.value })}
+                        onChange={(e) => handleStartDateChange(e.target.value)}
                         min={new Date().toISOString().split('T')[0]}
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">
+                        <i className="fa-regular fa-calendar-check" style={{ color: '#38bdf8', marginRight: '4px' }}></i> Travel End Date:
+                      </label>
+                      <input
+                        type="date"
+                        className="form-input"
+                        value={plan.endDate}
+                        onChange={(e) => handleEndDateChange(e.target.value)}
+                        min={plan.startDate || new Date().toISOString().split('T')[0]}
                       />
                     </div>
                   </div>
@@ -279,17 +359,17 @@ export default function CustomTripPlanner({ onSuccessLead }) {
                       onClick={() => setStep(2)}
                       className="btn btn-primary"
                     >
-                      Next: Choose Vehicle & Stay <i className="fa-solid fa-arrow-right"></i>
+                      Next: Choose Vehicle & Travelers <i className="fa-solid fa-arrow-right"></i>
                     </button>
                   </div>
                 </div>
               )}
 
-              {/* STEP 2: VEHICLE & STAY */}
+              {/* STEP 2: VEHICLE & STAY & TRAVELERS */}
               {step === 2 && (
                 <div>
                   <h4 style={{ fontSize: '1.25rem', marginBottom: '1.25rem' }}>
-                    2. Choose Your Preferred Vehicle & Accommodation:
+                    2. Choose Vehicle, Accommodation & Traveler Breakdown:
                   </h4>
 
                   <div style={{ marginBottom: '2rem' }}>
@@ -321,52 +401,103 @@ export default function CustomTripPlanner({ onSuccessLead }) {
                     </div>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-                    <div className="form-group">
-                      <label className="form-label">Hotel Category:</label>
-                      <select
-                        className="form-select"
-                        value={plan.hotelCategory}
-                        onChange={(e) => setPlan({ ...plan, hotelCategory: e.target.value })}
-                      >
-                        <option value="Deluxe Himalayan Resort (3-Star & 4-Star)">Deluxe Resort (3-Star / 4-Star with View)</option>
-                        <option value="Luxury 5-Star Boutique & Heritage Stay">Luxury 5-Star & Heritage Stays</option>
-                        <option value="Cozy Homestay & Authentic Local Village Experience">Authentic Homestay / Eco-cottages</option>
-                        <option value="Cab Only (No Hotel Required)">Cab Only (I will book my own hotels)</option>
-                      </select>
+                  <div className="form-group" style={{ marginBottom: '1.75rem' }}>
+                    <label className="form-label">Hotel Category:</label>
+                    <select
+                      className="form-select"
+                      value={plan.hotelCategory}
+                      onChange={(e) => setPlan({ ...plan, hotelCategory: e.target.value })}
+                    >
+                      <option value="Deluxe Himalayan Resort (3-Star & 4-Star)">Deluxe Resort (3-Star / 4-Star with View)</option>
+                      <option value="Luxury 5-Star Boutique & Heritage Stay">Luxury 5-Star & Heritage Stays</option>
+                      <option value="Cozy Homestay & Authentic Local Village Experience">Authentic Homestay / Eco-cottages</option>
+                      <option value="Cab Only (No Hotel Required)">Cab Only (I will book my own hotels)</option>
+                    </select>
+                  </div>
+
+                  {/* Traveler categories: Adults, Children, Elderly */}
+                  <div style={{ marginBottom: '1.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                      <label className="form-label" style={{ margin: 0 }}>
+                        <i className="fa-solid fa-users" style={{ color: 'var(--accent-gold)', marginRight: '4px' }}></i> Traveler Categories
+                      </label>
+                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                        Total: <strong>{plan.travelersCount} Passengers</strong>
+                      </span>
                     </div>
 
-                    <div className="form-group">
-                      <label className="form-label">Adults (12+ yrs):</label>
-                      <input
-                        type="number"
-                        min="1"
-                        max="50"
-                        className="form-input"
-                        value={plan.adultsCount}
-                        onChange={(e) => {
-                          const val = Math.max(1, parseInt(e.target.value, 10) || 1);
-                          setPlan({
-                            ...plan,
-                            adultsCount: val,
-                            travelersCount: val + (parseInt(plan.childrenCount, 10) || 0)
-                          });
-                        }}
-                      />
-                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '1.25rem' }}>
+                      <div className="form-group">
+                        <label className="form-label" style={{ fontSize: '0.82rem' }}>
+                          <i className="fa-solid fa-user" style={{ color: '#60a5fa', marginRight: '4px' }}></i> Adults (12-59 yrs):
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="50"
+                          className="form-input"
+                          value={plan.adultsCount}
+                          onChange={(e) => {
+                            const val = Math.max(1, parseInt(e.target.value, 10) || 1);
+                            setPlan({
+                              ...plan,
+                              adultsCount: val,
+                              travelersCount: val + (parseInt(plan.childrenCount, 10) || 0) + (parseInt(plan.elderlyCount, 10) || 0)
+                            });
+                          }}
+                        />
+                      </div>
 
-                    <div className="form-group">
-                      <label className="form-label">Children (0-11 yrs):</label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="20"
-                        className="form-input"
-                        value={plan.childrenCount}
-                        onChange={(e) => handleChildrenCountChange(e.target.value)}
-                      />
+                      <div className="form-group">
+                        <label className="form-label" style={{ fontSize: '0.82rem' }}>
+                          <i className="fa-solid fa-child" style={{ color: '#38bdf8', marginRight: '4px' }}></i> Children (0-11 yrs):
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="20"
+                          className="form-input"
+                          value={plan.childrenCount}
+                          onChange={(e) => handleChildrenCountChange(e.target.value)}
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label" style={{ fontSize: '0.82rem' }}>
+                          <i className="fa-solid fa-person-cane" style={{ color: 'var(--accent-gold)', marginRight: '4px' }}></i> Elderly (60+ yrs):
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="20"
+                          className="form-input"
+                          value={plan.elderlyCount}
+                          onChange={(e) => handleElderlyCountChange(e.target.value)}
+                        />
+                      </div>
                     </div>
                   </div>
+
+                  {/* Senior Citizen Alert */}
+                  {plan.elderlyCount > 0 && (
+                    <div style={{
+                      background: 'rgba(245, 158, 11, 0.1)',
+                      border: '1px solid rgba(245, 158, 11, 0.3)',
+                      borderRadius: 'var(--radius-sm)',
+                      padding: '0.75rem 1rem',
+                      marginBottom: '1.5rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.65rem',
+                      fontSize: '0.82rem',
+                      color: '#fbbf24'
+                    }}>
+                      <i className="fa-solid fa-heart-pulse" style={{ fontSize: '1.1rem', flexShrink: 0 }}></i>
+                      <span>
+                        <strong>Senior Traveler Comfort Priority:</strong> We recommend Innova Crysta for smoother mountain suspension, arrange ground-floor rooms with step-free access, and plan relaxed high-altitude acclimatization stops.
+                      </span>
+                    </div>
+                  )}
 
                   {/* Child Ages for Custom Trip Planner */}
                   {plan.childrenCount > 0 && (
@@ -376,7 +507,7 @@ export default function CustomTripPlanner({ onSuccessLead }) {
                       borderRadius: 'var(--radius-sm)',
                       padding: '0.85rem 1rem',
                       marginTop: '1rem',
-                      marginBottom: '1rem'
+                      marginBottom: '1.5rem'
                     }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.6rem', flexWrap: 'wrap', gap: '0.25rem' }}>
                         <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
@@ -459,18 +590,21 @@ export default function CustomTripPlanner({ onSuccessLead }) {
                       <strong>{plan.destinations.join(' + ')}</strong>
                     </div>
                     <div>
-                      <span style={{ color: 'var(--text-muted)' }}>Duration: </span>
-                      <strong>{plan.daysCount} Days</strong>
+                      <span style={{ color: 'var(--text-muted)' }}>Duration & Dates: </span>
+                      <strong>
+                        {plan.daysCount} Days {plan.startDate ? `(${plan.startDate}${plan.endDate ? ` to ${plan.endDate}` : ''})` : ''}
+                      </strong>
                     </div>
                     <div>
                       <span style={{ color: 'var(--text-muted)' }}>Vehicle: </span>
                       <strong>{plan.vehicle.split('/')[0]}</strong>
                     </div>
                     <div>
-                      <span style={{ color: 'var(--text-muted)' }}>Travelers: </span>
+                      <span style={{ color: 'var(--text-muted)' }}>Travelers ({plan.travelersCount} Total): </span>
                       <strong>
                         {plan.adultsCount} Adult(s)
-                        {plan.childrenCount > 0 ? `, ${plan.childrenCount} Child(ren) (Ages: ${plan.childrenAges.slice(0, plan.childrenCount).join(', ')})` : ''}
+                        {plan.childrenCount > 0 ? `, ${plan.childrenCount} Child(ren)` : ''}
+                        {plan.elderlyCount > 0 ? `, ${plan.elderlyCount} Senior(s)` : ''}
                       </strong>
                     </div>
                   </div>
